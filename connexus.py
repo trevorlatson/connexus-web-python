@@ -24,6 +24,13 @@ class Image(db.Model):
     longitude = db.FloatProperty()
     date = db.DateTimeProperty(auto_now_add=True)
 
+class ManPage(webapp2.RequestHandler):
+    def get(self):
+        self.response.headers['Content-Type'] = 'text/plain'
+        self.response.write('Hello, class!')
+        self.response.write('<p>Eventually this will have a small manual showing how to use the Connexus API with
+        Android')
+
 class AddStream(webapp2.RequestHandler):
     def post(self):
         stream = Stream()
@@ -105,12 +112,12 @@ class DateSkipper(json.JSONEncoder):
         return json.JSONEncoder.default(self, obj) 
 
 application = webapp2.WSGIApplication([
-    ('/', MainHandler),
-    ('/api/addstream', AddStream),
-    ('/api/allstreams', AllStreams),
-    ('/api/mystreams', MyStreams),
-    ('/api/images', StreamImages),
-    ('/api/subscribe', Subscribe),
-    ('/api/upload/geturl', UploadImage),
-    ('/api/upload/handler', UploadHandler),
+    ('/', ManPage),
+    ('/addstream', AddStream),
+    ('/allstreams', AllStreams),
+    ('/mystreams', MyStreams),
+    ('/images', StreamImages),
+    ('/subscribe', Subscribe),
+    ('/upload/geturl', UploadImage),
+    ('/upload/handler', UploadHandler),
 ], debug=True)
