@@ -28,8 +28,8 @@ class ManPage(webapp2.RequestHandler):
     def get(self):
         self.response.headers['Content-Type'] = 'text/plain'
         self.response.write('Hello, class!')
-        self.response.write('<p>Eventually this will have a small manual showing how to use the Connexus API with
-        Android')
+        self.response.write('<p>Eventually this will have a small manual showing how to use the Connexus API with'
+                'Android')
 
 class AddStream(webapp2.RequestHandler):
     def post(self):
