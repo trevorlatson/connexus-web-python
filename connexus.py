@@ -9,6 +9,7 @@ from google.appengine.ext import db
 from google.appengine.ext import blobstore
 from google.appengine.ext.webapp import blobstore_handlers
 
+import geo.geomodel
 import webapp2
 
 class Stream(db.Expando):
@@ -17,12 +18,14 @@ class Stream(db.Expando):
     cover_url = db.StringProperty()
     followers = db.StringListProperty()
     date = db.DateTimeProperty(auto_now_add=True)
+    def to_dict(self):
+        return db.to_dict(self, {'id':self.key().id()})
 
-class Image(db.Model):
+class Image(dgeo.geomodel.GeoModel):
     image_url = db.StringProperty()
-    latitude = db.FloatProperty()
-    longitude = db.FloatProperty()
     date = db.DateTimeProperty(auto_now_add=True)
+    def to_dict(self):
+        return db.to_dict(self, {'id':self.key().id()})
 
 class ManPage(webapp2.RequestHandler):
     def get(self):
@@ -46,12 +49,6 @@ class GetUploadUrl(webapp2.RequestHandler):
         self.response.headers['Content-Type'] = 'text/plain'
         self.response.out.write(upload_url)
 
-class UploadImage(webapp2.RequestHandler):
-    def post(self):
-        upload_url = blobstore.create_upload_url('/api/upload/handler')
-        self.response.headers['Content-Type'] = 'text/plain'
-        self.response.out.write(upload_url)
-
 class UploadHandler(blobstore_handlers.BlobstoreUploadHandler):
     def post(self):
         upload_files = self.get_uploads('file')
@@ -65,8 +62,7 @@ class UploadHandler(blobstore_handlers.BlobstoreUploadHandler):
         stream = Stream.get_by_id(long(stream_id))
 
         image = Image(parent=stream)
-        image.latitude = float(latitude)
-        image.longitude = float(longitude)
+        image.location = db.GeoPt(float(latitude), float(longitude))
         image.image_url = serving_url
         image.put()
 
@@ -118,6 +114,6 @@ application = webapp2.WSGIApplication([
     ('/mystreams', MyStreams),
     ('/images', StreamImages),
     ('/subscribe', Subscribe),
-    ('/upload/geturl', UploadImage),
+    ('/upload/geturl', GetUploadUrl),
     ('/upload/handler', UploadHandler),
 ], debug=True)
