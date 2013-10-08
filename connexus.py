@@ -3,29 +3,33 @@ import datetime
 import json
 import urllib
 
-from geo.geomodel import GeoModel
 from google.appengine.api import users
+from google.appengine.api import search 
 from google.appengine.api.images import get_serving_url
-from google.appengine.ext import db
+from google.appengine.ext import ndb
 from google.appengine.ext import blobstore
 from google.appengine.ext.webapp import blobstore_handlers
 
 import webapp2
 
-class Stream(db.Expando):
-    name = db.StringProperty()
-    tags = db.StringProperty()
-    cover_url = db.StringProperty()
-    followers = db.StringListProperty()
-    date = db.DateTimeProperty(auto_now_add=True)
+class Stream(ndb.Expando):
+    name = ndb.StringProperty()
+    tags = ndb.StringProperty()
+    cover_url = ndb.StringProperty()
+    followers = []
+    date = ndb.DateTimeProperty(auto_now_add=True)
     def to_dict(self):
-        return db.to_dict(self, {'id':self.key().id()})
+        d = super(Stream, self).to_dict()
+        d['id'] = self.key.id()
+        return d
 
-class Image(GeoModel):
-    image_url = db.StringProperty()
-    date = db.DateTimeProperty(auto_now_add=True)
+class Image(ndb.Model):
+    image_url = ndb.StringProperty()
+    date = ndb.DateTimeProperty(auto_now_add=True)
     def to_dict(self):
-        return db.to_dict(self, {'id':self.key().id()})
+        d = super(Image, self).to_dict()
+        d['id'] = self.key.id()
+        return d
 
 class ManPage(webapp2.RequestHandler):
     def get(self):
@@ -84,7 +88,7 @@ class GetUploadUrl(webapp2.RequestHandler):
 
 class UploadHandler(blobstore_handlers.BlobstoreUploadHandler):
     def post(self):
-        upload_files = self.get_uploads('file')
+        upload_files = self.get_uploads('image')
         blob_info = upload_files[0]
         key = blob_info.key()
 
@@ -94,9 +98,16 @@ class UploadHandler(blobstore_handlers.BlobstoreUploadHandler):
         longitude = self.request.get('longitude')
         stream = Stream.get_by_id(long(stream_id))
 
-        image = Image(parent=stream)
-        image.location = db.GeoPt(float(latitude), float(longitude))
+        geopoint = search.GeoPoint(float(latitude), float(longitude))
+        doc = search.Document(fields=[
+            search.TextField(name='key', value=str(stream.key)),
+            search.GeoField(name='loc', value=geopoint)])
+        search.Index(name='geopoints').put(doc)
+
+        image = Image(parent=stream.key)
         image.image_url = serving_url
+        if not stream.cover_url:
+            stream.cover_url = serving_url
         image.put()
 
 class Subscribe(webapp2.RequestHandler):
@@ -109,18 +120,27 @@ class Subscribe(webapp2.RequestHandler):
 
 class AllStreams(webapp2.RequestHandler):
     def get(self):
-        query = Stream.all()
-        query.order('-date')
-        streams = [db.to_dict(stream) for stream in query.run()]
+        query = Stream.query().order(-Stream.date)
+        streams = [stream.to_dict() for stream in query.fetch()]
         self.response.headers['Content-Type'] = 'application/json'
         self.response.out.write(json.dumps(streams, cls=DateSkipper))
 
 class MyStreams(webapp2.RequestHandler):
     def get(self):
-        query = Stream.all()
-        query.order('-date')
+        query = Stream.query().order(-Stream.date)
         email = self.request.get('email')
-        streams = [db.to_dict(stream) for stream in query.run() if email in stream.followers]
+        streams = [stream.to_dict() for stream in query.fetch() if email in stream.followers]
+        self.response.headers['Content-Type'] = 'application/json'
+        self.response.out.write(json.dumps(streams, cls=DateSkipper))
+
+class NearbyStreams(webapp2.RequestHandler):
+    def get(self):
+        latitude = self.request.get('latitude')
+        longitude = self.request.get('longitude')
+        index = search.Index('geopoints')
+        query = 'distance(loc, geopoint(' + str(latitude) + ',' + str(longitude) + ')) < 1000'
+        results = index.search(query)
+        streams = [Stream.get_or_insert(str(doc.field('key'))) for doc in results]
         self.response.headers['Content-Type'] = 'application/json'
         self.response.out.write(json.dumps(streams, cls=DateSkipper))
 
@@ -128,9 +148,8 @@ class StreamImages(webapp2.RequestHandler):
     def get(self):
         stream_id = self.request.get('stream')
         stream = Stream.get_by_id(long(stream_id))
-        query = Image.all()
-        query.ancestor(stream)
-        images = [db.to_dict(image) for image in query.run()]
+        query = Image.query().ancestor(stream)
+        images = [image.to_dict() for image in query.fetch()]
         self.response.headers['Content-Type'] = 'application/json'
         self.response.out.write(json.dumps(images, cls=DateSkipper))
 
@@ -145,6 +164,7 @@ application = webapp2.WSGIApplication([
     ('/addstream', AddStream),
     ('/allstreams', AllStreams),
     ('/mystreams', MyStreams),
+    ('/nearbystreams', NearbyStreams),
     ('/images', StreamImages),
     ('/subscribe', Subscribe),
     ('/upload/geturl', GetUploadUrl),
