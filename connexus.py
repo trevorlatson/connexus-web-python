@@ -3,13 +3,13 @@ import datetime
 import json
 import urllib
 
+from geo.geomodel import GeoModel
 from google.appengine.api import users
 from google.appengine.api.images import get_serving_url
 from google.appengine.ext import db
 from google.appengine.ext import blobstore
 from google.appengine.ext.webapp import blobstore_handlers
 
-import geo.geomodel
 import webapp2
 
 class Stream(db.Expando):
@@ -21,7 +21,7 @@ class Stream(db.Expando):
     def to_dict(self):
         return db.to_dict(self, {'id':self.key().id()})
 
-class Image(geo.geomodel.GeoModel):
+class Image(GeoModel):
     image_url = db.StringProperty()
     date = db.DateTimeProperty(auto_now_add=True)
     def to_dict(self):
