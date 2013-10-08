@@ -21,7 +21,7 @@ class Stream(db.Expando):
     def to_dict(self):
         return db.to_dict(self, {'id':self.key().id()})
 
-class Image(dgeo.geomodel.GeoModel):
+class Image(geo.geomodel.GeoModel):
     image_url = db.StringProperty()
     date = db.DateTimeProperty(auto_now_add=True)
     def to_dict(self):
