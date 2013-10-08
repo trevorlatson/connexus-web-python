@@ -29,10 +29,43 @@ class Image(GeoModel):
 
 class ManPage(webapp2.RequestHandler):
     def get(self):
-        self.response.headers['Content-Type'] = 'text/plain'
+        self.response.headers['Content-Type'] = 'text/html'
         self.response.write('Hello, class!')
-        self.response.write('<p>Eventually this will have a small manual showing how to use the Connexus API with'
-                'Android')
+        self.response.write("""
+<p>
+I've created my own Connexus web API for the Android miniproject and I'd like to share it with the class.<br>
+<p>
+<a href="https://github.com/zachwhaley/connexus-web-python" >Git repo</a><br>
+<p>
+It's not completely functional, but here are the things that do work:<br>
+Get all streams:
+<a href="http://connexus-api.appspot.com/allstreams" >connexus-api.appspot.com/allstreams</a><br>
+<p>
+Get subscribed streams:<br>
+<a href="http://connexus-api.appspot.com/mystreams?email=zachbwhaley@gmail.com" >
+connexus-api.appspot.com/mystreams?email=zachbwhaley@gmail.com</a><br>
+<p>
+Add stream:<br>
+<code>curl --data "name=greyhounds&tags=greyhound&cover_url=http://imgur.com/IcCcXYg"
+connexus-api.appspot.com/addstream</code><br>
+Get stream images:<br>
+<a href="http://connexus-api.appspot.com/images?stream=5629499534213120" >
+connexus-api.appspot.com/images?stream=5629499534213120</a><br>
+<p>
+Subscribe to a stream:<br>
+<code>curl --data "email=zachbwhaley@gmail.com&stream=5629499534213120" connexus-api.appspot.com/subscribe</code><br>
+<p>
+Things to come:<br>
+Nearby Streams<br>
+<a href="http://connexus-api.appspot.com/nearbystreams?latitude=foo&longitude=bar" >
+connexus-api.appspot.com/nearbystreams?latitude=foo&longitude=bar</a><br>
+<p>
+Image uploading<br>
+This is going to be a two part thing, where the Android app asks for a URL, populates that URL with image info (lat, lon, stream id, etc) and then sends the URL back as a multipart thing.
+<p>
+Feel free to use these in your Android app :-)<br>
+Let me know if I'm missing anything, and please feel free to contribute.<br>
+""")
 
 class AddStream(webapp2.RequestHandler):
     def post(self):
@@ -45,7 +78,7 @@ class AddStream(webapp2.RequestHandler):
 
 class GetUploadUrl(webapp2.RequestHandler):
     def get(self):
-        upload_url = blobstore.create_upload_url('/api/upload/handler')
+        upload_url = blobstore.create_upload_url('/upload/handler')
         self.response.headers['Content-Type'] = 'text/plain'
         self.response.out.write(upload_url)
 
