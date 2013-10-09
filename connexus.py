@@ -59,13 +59,18 @@ connexus-api.appspot.com/images?stream=5629499534213120</a><br>
 Subscribe to a stream:<br>
 <code>curl --data "email=zachbwhaley@gmail.com&stream=5629499534213120" connexus-api.appspot.com/subscribe</code><br>
 <p>
+Image uploading<br>
+This is a two part call<br>
+1st: get the upload URL<br>
+<a href="http//:connexus-api.appspot.com/upload/geturl" >connexus-api.appspot.com/upload/geturl</a><br>
+2nd: Send the URL with Latitude Longitude, a Stream id, and the location of your image as multipart data<br>
+<code>curl -F "latitude=30.267549" -F "longitude=-97.743645" -F "stream=5629499534213120" -F "/path/to/image.jpg"
+http://connexus-api.appspot.com/url-given-from-above</code><br>
+<p>
 Things to come:<br>
 Nearby Streams<br>
 <a href="http://connexus-api.appspot.com/nearbystreams?latitude=foo&longitude=bar" >
 connexus-api.appspot.com/nearbystreams?latitude=foo&longitude=bar</a><br>
-<p>
-Image uploading<br>
-This is going to be a two part thing, where the Android app asks for a URL, populates that URL with image info (lat, lon, stream id, etc) and then sends the URL back as a multipart thing.
 <p>
 Feel free to use these in your Android app :-)<br>
 Let me know if I'm missing anything, and please feel free to contribute.<br>
