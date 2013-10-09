@@ -91,17 +91,6 @@ class GetUploadUrl(webapp2.RequestHandler):
 
 class UploadHandler(blobstore_handlers.BlobstoreUploadHandler):
     def post(self):
-        doc_index = search.Index('geopoints')
-        # looping because get_range by default returns up to 100 documents at a time
-        while True:
-            # Get a list of documents populating only the doc_id field and extract the ids.
-            document_ids = [document.doc_id
-                            for document in doc_index.get_range(ids_only=True)]
-            if not document_ids:
-                break
-            # Delete the documents for the given ids from the Index.
-            doc_index.delete(document_ids)
-
         upload_files = self.get_uploads('image')
         blob_info = upload_files[0]
         key = blob_info.key()
