@@ -67,7 +67,6 @@ This is a two part call<br>
 <code>curl -F "latitude=30.267549" -F "longitude=-97.743645" -F "stream=5629499534213120" -F "image=@/path/to/image.jpg"
 http://connexus-api.appspot.com/url-given-from-above</code><br>
 <p>
-Things to come:<br>
 Nearby Streams<br>
 <a href="http://connexus-api.appspot.com/nearbystreams?latitude=foo&longitude=bar" >
 connexus-api.appspot.com/nearbystreams?latitude=foo&longitude=bar</a><br>
