@@ -153,7 +153,7 @@ class StreamImages(webapp2.RequestHandler):
     def get(self):
         stream_id = self.request.get('stream')
         stream = Stream.get_by_id(long(stream_id))
-        query = Image.query().ancestor(stream)
+        query = Image.query().ancestor(stream.key)
         images = [image.to_dict() for image in query.fetch()]
         self.response.headers['Content-Type'] = 'application/json'
         self.response.out.write(json.dumps(images, cls=DateSkipper))
