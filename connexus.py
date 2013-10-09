@@ -69,7 +69,7 @@ http://connexus-api.appspot.com/url-given-from-above</code><br>
 <p>
 Nearby Streams<br>
 <a href="http://connexus-api.appspot.com/nearbystreams?latitude=foo&longitude=bar" >
-connexus-api.appspot.com/nearbystreams?latitude=foo&longitude=bar</a><br>
+connexus-api.appspot.com/nearbystreams?latitude=30.267549&longitude=-97.743645</a><br>
 <p>
 Feel free to use these in your Android app :-)<br>
 Let me know if I'm missing anything, and please feel free to contribute.<br>
