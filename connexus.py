@@ -93,6 +93,17 @@ class GetUploadUrl(webapp2.RequestHandler):
 
 class UploadHandler(blobstore_handlers.BlobstoreUploadHandler):
     def post(self):
+        doc_index = search.Index('geopoints')
+        # looping because get_range by default returns up to 100 documents at a time
+        while True:
+            # Get a list of documents populating only the doc_id field and extract the ids.
+            document_ids = [document.doc_id
+                            for document in doc_index.get_range(ids_only=True)]
+            if not document_ids:
+                break
+            # Delete the documents for the given ids from the Index.
+            doc_index.delete(document_ids)
+
         upload_files = self.get_uploads('image')
         blob_info = upload_files[0]
         key = blob_info.key()
@@ -105,7 +116,7 @@ class UploadHandler(blobstore_handlers.BlobstoreUploadHandler):
 
         geopoint = search.GeoPoint(float(latitude), float(longitude))
         doc = search.Document(fields=[
-            search.TextField(name='key', value=str(stream.key)),
+            search.TextField(name='id', value=str(stream.key.id())),
             search.GeoField(name='loc', value=geopoint)])
         search.Index(name='geopoints').put(doc)
 
@@ -145,7 +156,9 @@ class NearbyStreams(webapp2.RequestHandler):
         index = search.Index('geopoints')
         query = 'distance(loc, geopoint(' + str(latitude) + ',' + str(longitude) + ')) < 1000'
         results = index.search(query)
-        streams = [Stream.get_or_insert(str(doc.field('key'))) for doc in results]
+        ids = [long(doc.field('id').value) for doc in results]
+        streams = Stream.query().order(-Stream.date).fetch()
+        streams = [s.to_dict() for s in streams if s.key.id() in ids]
         self.response.headers['Content-Type'] = 'application/json'
         self.response.out.write(json.dumps(streams, cls=DateSkipper))
 
