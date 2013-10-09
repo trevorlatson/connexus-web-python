@@ -64,7 +64,7 @@ This is a two part call<br>
 1st: get the upload URL<br>
 <a href="http://connexus-api.appspot.com/upload/geturl" >connexus-api.appspot.com/upload/geturl</a><br>
 2nd: Send the URL with Latitude Longitude, a Stream id, and the location of your image as multipart data<br>
-<code>curl -F "latitude=30.267549" -F "longitude=-97.743645" -F "stream=5629499534213120" -F "/path/to/image.jpg"
+<code>curl -F "latitude=30.267549" -F "longitude=-97.743645" -F "stream=5629499534213120" -F "image=@/path/to/image.jpg"
 http://connexus-api.appspot.com/url-given-from-above</code><br>
 <p>
 Things to come:<br>
