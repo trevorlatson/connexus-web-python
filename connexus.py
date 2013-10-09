@@ -16,7 +16,7 @@ class Stream(ndb.Expando):
     name = ndb.StringProperty()
     tags = ndb.StringProperty()
     cover_url = ndb.StringProperty()
-    followers = []
+    followers = ndb.StringProperty(repeated=True)
     date = ndb.DateTimeProperty(auto_now_add=True)
     def to_dict(self):
         d = super(Stream, self).to_dict()
@@ -68,7 +68,7 @@ This is a two part call<br>
 http://connexus-api.appspot.com/url-given-from-above</code><br>
 <p>
 Nearby Streams<br>
-<a href="http://connexus-api.appspot.com/nearbystreams?latitude=foo&longitude=bar" >
+<a href="http://connexus-api.appspot.com/nearbystreams?latitude=30.267549&longitude=-97.743645" >
 connexus-api.appspot.com/nearbystreams?latitude=30.267549&longitude=-97.743645</a><br>
 <p>
 Feel free to use these in your Android app :-)<br>
@@ -81,7 +81,6 @@ class AddStream(webapp2.RequestHandler):
         stream.name = self.request.get('name')
         stream.tags = self.request.get('tags')
         stream.cover_url = self.request.get('cover_url')
-        stream.followers = []
         stream.put()
 
 class GetUploadUrl(webapp2.RequestHandler):
@@ -123,6 +122,7 @@ class UploadHandler(blobstore_handlers.BlobstoreUploadHandler):
         image.image_url = serving_url
         if not stream.cover_url:
             stream.cover_url = serving_url
+            stream.put()
         image.put()
 
 class Subscribe(webapp2.RequestHandler):
@@ -153,7 +153,7 @@ class NearbyStreams(webapp2.RequestHandler):
         latitude = self.request.get('latitude')
         longitude = self.request.get('longitude')
         index = search.Index('geopoints')
-        query = 'distance(loc, geopoint(' + str(latitude) + ',' + str(longitude) + ')) < 1000'
+        query = 'distance(loc, geopoint(%s, %s)) < 10000' % (latitude, longitude)
         results = index.search(query)
         ids = [long(doc.field('id').value) for doc in results]
         streams = Stream.query().order(-Stream.date).fetch()
