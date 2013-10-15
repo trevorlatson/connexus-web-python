@@ -89,6 +89,11 @@ class GetUploadUrl(webapp2.RequestHandler):
         self.response.headers['Content-Type'] = 'text/plain'
         self.response.out.write(upload_url)
 
+class UploadImage(webapp2.RequestHandler):
+    def post(self):
+        upload_url = blobstore.create_upload_url('/upload/handler')
+        self.response.headers['Content-Type'] = 'multipart/form-data'
+
 class UploadHandler(blobstore_handlers.BlobstoreUploadHandler):
     def post(self):
         upload_files = self.get_uploads('image')
@@ -113,6 +118,8 @@ class UploadHandler(blobstore_handlers.BlobstoreUploadHandler):
             stream.cover_url = serving_url
             stream.put()
         image.put()
+        self.response.headers['Content-Type'] = 'application/json'
+        self.response.out.write(json.dumps(image.to_dict(), cls=DateSkipper))
 
 class Subscribe(webapp2.RequestHandler):
     def post(self):
@@ -142,7 +149,7 @@ class NearbyStreams(webapp2.RequestHandler):
         latitude = self.request.get('latitude')
         longitude = self.request.get('longitude')
         index = search.Index('geopoints')
-        query = 'distance(loc, geopoint(%s, %s)) < 10000' % (latitude, longitude)
+        query = 'distance(loc, geopoint(%s, %s)) < 1000' % (latitude, longitude)
         results = index.search(query)
         ids = [long(doc.field('id').value) for doc in results]
         streams = Stream.query().order(-Stream.date).fetch()
@@ -174,5 +181,6 @@ application = webapp2.WSGIApplication([
     ('/images', StreamImages),
     ('/subscribe', Subscribe),
     ('/upload/geturl', GetUploadUrl),
+    ('/upload', UploadImage),
     ('/upload/handler', UploadHandler),
 ], debug=True)
