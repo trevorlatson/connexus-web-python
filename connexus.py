@@ -104,11 +104,11 @@ class UploadHandler(blobstore_handlers.BlobstoreUploadHandler):
 
         serving_url = get_serving_url(key)
         stream_id = self.request.get('stream')
-        latitude = self.request.get('latitude')
-        longitude = self.request.get('longitude')
+        latitude = float(self.request.get('latitude'))
+        longitude = float(self.request.get('longitude'))
         stream = Stream.get_by_id(long(stream_id))
 
-        geopoint = search.GeoPoint(float(latitude), float(longitude))
+        geopoint = search.GeoPoint(latitude, longitude)
         doc = search.Document(fields=[
             search.TextField(name='id', value=str(stream.key.id())),
             search.GeoField(name='loc', value=geopoint)])
